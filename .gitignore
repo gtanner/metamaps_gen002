@@ -20,6 +20,5 @@ tmp
 
 .DS_Store
 
-#ignore puppet/vagrant files
+#ignore vagrant files
 .vagrant*
-puppet*
