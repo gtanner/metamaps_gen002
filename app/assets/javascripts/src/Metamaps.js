@@ -1394,7 +1394,7 @@ Metamaps.SynapseCard = {
     },
     add_user_info: function (synapse) {
         var u = '<div id="edgeUser" class="hoverForTip">';
-        u += '<img src="" width="24" height="24" />'
+        u += '<a href="/explore/mapper/' + synapse.get("user_id") + '"> <img src="" width="24" height="24" /></a>'
         u += '<div class="tip">' + synapse.get("user_name") + '</div></div>';
         $('#editSynLowerBar').append(u);
 
@@ -2818,8 +2818,20 @@ Metamaps.Control = {
         }
 
         Metamaps.Control.deselectNode(node);
-        Metamaps.Visualize.mGraph.graph.removeNode(nodeid);
-        Metamaps.Visualize.mGraph.plot();
+
+        node.setData('alpha', 0, 'end');
+        node.eachAdjacency(function (adj) {
+            adj.setData('alpha', 0, 'end');
+        });
+        Metamaps.Visualize.mGraph.fx.animate({
+            modes: ['node-property:alpha',
+            'edge-property:alpha'
+        ],
+            duration: 500
+        });
+        setTimeout(function () {
+            Metamaps.Visualize.mGraph.graph.removeNode(nodeid);
+        }, 500);
         Metamaps.Filter.checkMetacodes();
         Metamaps.Filter.checkMappers();
     },
@@ -2984,13 +2996,17 @@ Metamaps.Control = {
     hideEdge: function (edge) {
         var from = edge.nodeFrom.id;
         var to = edge.nodeTo.id;
+        edge.setData('alpha', 0, 'end');
         Metamaps.Control.deselectEdge(edge);
-        if (Metamaps.Visualize.mGraph.graph.getAdjacence(from, to)) {
+        Metamaps.Visualize.mGraph.fx.animate({
+            modes: ['edge-property:alpha'],
+            duration: 500
+        });
+        setTimeout(function () {
             Metamaps.Visualize.mGraph.graph.removeAdjacence(from, to);
-            Metamaps.Visualize.mGraph.plot();
-            Metamaps.Filter.checkSynapses();
-            Metamaps.Filter.checkMappers();
-        }
+        }, 500);
+        Metamaps.Filter.checkSynapses();
+        Metamaps.Filter.checkMappers();
     },
     updateSelectedPermissions: function (permission) {
 
@@ -4604,7 +4620,6 @@ Metamaps.Map.CheatSheet = {
     init: function () {
         // tab the cheatsheet
         $('#cheatSheet').tabs();
-        $('#cheatSheet').tabs("disable", 1); // TODO re-enable once the tutorials are in
         $('#quickReference').tabs().addClass("ui-tabs-vertical ui-helper-clearfix");
         $("#quickReference .ui-tabs-nav li").removeClass("ui-corner-top").addClass("ui-corner-left");
         
@@ -4616,13 +4631,13 @@ Metamaps.Map.CheatSheet = {
         };
 
         $('#gettingStarted').click(function() {
-            switchVideo(this,'88334167');
+            //switchVideo(this,'88334167');
         });
         $('#upYourSkillz').click(function() {
-            switchVideo(this,'100118167');
+            //switchVideo(this,'100118167');
         });
         $('#advancedMapping').click(function() {
-            switchVideo(this,'88334167');
+            //switchVideo(this,'88334167');
         });
     }
 }; // end Metamaps.Map.CheatSheet
@@ -4765,6 +4780,8 @@ Metamaps.Map.InfoBox = {
         $('.mapContributors .tip').unbind().click(function(event){
             event.stopPropagation();
         });
+        $('.mapContributors .tip li a').click(Metamaps.Router.intercept);
+
         $('.mapInfoBox').unbind('.hideTip').bind('click.hideTip', function(){
             $('.mapContributors .tip').hide();
         });
@@ -4778,15 +4795,15 @@ Metamaps.Map.InfoBox = {
         var self = Metamaps.Map.InfoBox;
 
         var string = ""; 
-
+        console.log("hello!!")
         string += "<ul>";
 
         Metamaps.Mappers.each(function(m){
-            string += '<li><img class="rtUserImage" width="25" height="25" src="' + m.get("image") + '" />' + m.get("name") + '</li>';
+            string += '<li><a href="/explore/mapper/' + m.get("id") + '">' + '<img class="rtUserImage" width="25" height="25" src="' + m.get("image") + '" />' + m.get("name") + '</a></li>';
         });
         
         string += "</ul>";
-
+        console.log(string);
         return string;
     },
     updateNumbers: function () {
